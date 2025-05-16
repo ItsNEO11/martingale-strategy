@@ -4,9 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
-import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif'] = ['SimHei']  # 或者 ['Microsoft YaHei']
-plt.rcParams['axes.unicode_minus'] = False    # 正确显示负号
+from matplotlib import font_manager
+import os
+
+# ✅ 设置中文字体为 PingFangSC.ttf（部署于 Streamlit Cloud 时自动加载）
+font_path = os.path.join("fonts", "PingFangSC.ttf")
+if os.path.exists(font_path):
+    font_prop = font_manager.FontProperties(fname=font_path)
+    plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
+    plt.rcParams['axes.unicode_minus'] = False
+
 st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
 st.title("📊 马丁格尔加仓策略可视化模拟")
 st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
