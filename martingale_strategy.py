@@ -109,7 +109,7 @@ colors = plt.cm.tab10.colors
 for step in range(1, num_entries + 1):
     sub_df = df.iloc[:step]
     net_position_value = sub_df["总持仓额"].iloc[-1]
-    quantity = ((sub_df["加仓总额"] - sub_df["交易手续费"]) / sub_df["加仓价格"]).sum()
+    quantity = ((sub_df["加仓总额"] - sub_df["手续费"]) / sub_df["加仓价格"]).sum()
 
     roi_curve, profit_curve = [], []
     for p in rebound_range:
@@ -191,7 +191,7 @@ st.pyplot(fig3)
 # === 📌 收益总结
 st.markdown(r'<h3 style="font-size:20px;">📌 当标的反弹至目标价格时</h3>', unsafe_allow_html=True)
 final_net_cost = df["总持仓额"].iloc[-1]
-final_quantity = ((df["加仓总额"] - df["交易手续费"]) / df["加仓价格"]).sum()
+final_quantity = ((df["加仓总额"] - df["手续费"]) / df["加仓价格"]).sum()
 final_close_fee = target_price * final_quantity * fee_rate
 final_profit = target_price * final_quantity - final_net_cost - final_close_fee
 final_roi = final_profit / total_capital
