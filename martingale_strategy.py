@@ -15,7 +15,7 @@ if os.path.exists(font_path):
     plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
-st.markdown('<h1 style="font-size:24px;">📊 马丁格尔加仓策略可视化模拟</h1>', unsafe_allow_html=True)
+st.markdown('<h1 style="font-size:26px;">📊 马丁格尔加仓策略可视化模拟</h1>', unsafe_allow_html=True)
 st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
 
 # === Sidebar 参数输入 ===
