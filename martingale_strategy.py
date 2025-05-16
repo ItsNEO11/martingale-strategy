@@ -137,7 +137,7 @@ for step in range(1, num_entries + 1):
 ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
-ax1.set_xlabel("BTC价格", fontsize=12, fontproperties=font_prop)
+ax1.set_xlabel("资产价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
 ax1.legend(prop=font_prop)
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
@@ -189,7 +189,7 @@ fig3.subplots_adjust(top=0.88)
 st.pyplot(fig3)
 
 # === 📌 收益总结
-st.markdown(r'<h3 style="font-size:20px;">📌 当 BTC 反弹至目标价格时</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">📌 当标的反弹至目标价格时</h3>', unsafe_allow_html=True)
 final_net_cost = df["总持仓额"].iloc[-1]
 final_quantity = ((df["加仓总额"] - df["交易手续费"]) / df["加仓价格"]).sum()
 final_close_fee = target_price * final_quantity * fee_rate
