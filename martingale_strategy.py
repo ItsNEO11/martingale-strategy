@@ -5,36 +5,36 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
 
-st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
-st.title("📊 马丁格尔加仓策略可视化模拟")
-st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
+st.set_page_config(page_title="Martingale Strategy Simulator", layout="wide")
+st.title("📊 Martingale Position Averaging Simulator")
+st.markdown("💡 All results include **0.05% open + 0.05% close trading fees**")
 
-# === Sidebar 参数输入 ===
-st.sidebar.header("策略参数设置")
-total_capital = st.sidebar.number_input("总本金（USD）", value=10000, step=500)
-mode = st.sidebar.radio("加仓方式", ["马丁加仓", "固定金额"], index=0)
-martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, 2.0, 0.1) if mode == "马丁加仓" else 1.0
-num_entries = st.sidebar.slider("加仓轮次", 2, 10, 4)
-target_price = st.sidebar.number_input("目标反弹价格（USD）", value=15000, step=100)
+# === Sidebar Parameters ===
+st.sidebar.header("Strategy Settings")
+total_capital = st.sidebar.number_input("Total Capital (USD)", value=10000, step=500)
+mode = st.sidebar.radio("Positioning Mode", ["Martingale", "Fixed Capital"], index=0)
+martin_ratio = st.sidebar.slider("Martingale Ratio", 1.0, 3.0, 2.0, 0.1) if mode == "Martingale" else 1.0
+num_entries = st.sidebar.slider("Number of Entries", 2, 10, 4)
+target_price = st.sidebar.number_input("Target Rebound Price (USD)", value=15000, step=100)
 
-# === 每轮价格与杠杆 ===
-st.sidebar.subheader("每轮加仓价格与杠杆设置")
+# === Entry Settings ===
+st.sidebar.subheader("Entry Price & Leverage Settings")
 entry_prices, leverage_list = [], []
 for i in range(num_entries):
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        entry_prices.append(st.number_input(f"第{i+1}轮加仓价格", value=14000 - i * 1000, step=100, key=f"price_{i}"))
+        entry_prices.append(st.number_input(f"Entry {i+1} Price", value=14000 - i * 1000, step=100, key=f"price_{i}"))
     with col2:
-        leverage_list.append(st.number_input(f"第{i+1}轮杠杆", value=5 if i == 0 else 10, min_value=1, max_value=100, step=1, key=f"lev_{i}"))
+        leverage_list.append(st.number_input(f"Entry {i+1} Leverage", value=5 if i == 0 else 10, min_value=1, max_value=100, step=1, key=f"lev_{i}"))
 
-# === 资金分配
-if mode == "固定金额":
+# === Capital Allocation ===
+if mode == "Fixed Capital":
     capital_distribution = [total_capital / num_entries] * num_entries
 else:
     weights = [martin_ratio ** i for i in range(num_entries)]
     capital_distribution = [total_capital * (w / sum(weights)) for w in weights]
 
-# === 策略模拟（含手续费，净仓位计算）
+# === Backtest Simulation ===
 fee_rate = 0.0005
 total_net_position = 0
 total_quantity = 0
@@ -62,34 +62,34 @@ for i in range(num_entries):
     avg_price_drop = (entry_prices[0] - avg_entry_price) / entry_prices[0]
 
     records.append({
-        "轮次": i + 1,
-        "加仓价格": price,
-        "加仓金额": round(capital, 2),
-        "杠杆": lev,
-        "加仓总额": round(position_value, 2),
-        "交易手续费": round(open_fee, 2),
-        "总持仓额": round(total_net_position, 2),
-        "平均成本": round(avg_entry_price, 2),
-        "平均杠杆": round(avg_leverage, 2),
-        "爆仓价格": round(liquidation_price, 2),
-        "资金占比": f"{capital_ratio * 100:.1f}%",
-        "均价下移幅度": f"{avg_price_drop * 100:.2f}%"
+        "Round": i + 1,
+        "Entry Price": price,
+        "Capital": round(capital, 2),
+        "Leverage": lev,
+        "Position Size": round(position_value, 2),
+        "Fee": round(open_fee, 2),
+        "Net Position": round(total_net_position, 2),
+        "Avg Entry Price": round(avg_entry_price, 2),
+        "Avg Leverage": round(avg_leverage, 2),
+        "Liq. Price": round(liquidation_price, 2),
+        "Capital Ratio": f"{capital_ratio * 100:.1f}%",
+        "Avg Price Drop": f"{avg_price_drop * 100:.2f}%"
     })
 
 df = pd.DataFrame(records)
 
-# === 表格展示
-st.subheader("📈 策略模拟结果表")
+# === Table Output ===
+st.subheader("📈 Strategy Result Table")
 st.dataframe(df, use_container_width=True)
 
-# === 💾 导出策略明细 CSV 文件 ===
-st.subheader("📤 导出策略明细")
+# === Download CSV ===
+st.subheader("📤 Export CSV")
 csv = df.to_csv(index=False).encode('utf-8-sig')
-filename = f"martingale_strategy_result_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
-st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, mime="text/csv")
+filename = f"strategy_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+st.download_button("📥 Download CSV", data=csv, file_name=filename, mime="text/csv")
 
-# === ROI 曲线（多轮比较，含手续费）
-st.subheader("📉 ROI 曲线图（含手续费）")
+# === ROI Curve ===
+st.subheader("📉 ROI Curve (With Fees)")
 rebound_range = np.arange(min(entry_prices), target_price + 3000, 200)
 if target_price not in rebound_range:
     rebound_range = np.sort(np.append(rebound_range, target_price))
@@ -136,8 +136,8 @@ ax1.legend()
 fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
 
-# === 📊 每轮加仓价格 vs 加仓头寸金额图（绿色渐变） ===
-st.subheader("📊 每轮加仓价格 vs 加仓头寸金额")
+# === Position Size Bar Chart ===
+st.subheader("📊 Entry Price vs Position Size")
 green_shades = ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45']
 green_cmap = LinearSegmentedColormap.from_list("green_shades", green_shades)
 
@@ -161,9 +161,8 @@ for bar, amt in zip(bars, amounts):
 fig2.subplots_adjust(top=0.88)
 st.pyplot(fig2)
 
-
-# === 🛡️ 每轮加仓后的爆仓边界安全比例图 ===
-st.subheader("🛡️ 每轮加仓后爆仓价格安全边界")
+# === Liquidation Margin Chart ===
+st.subheader("🛡️ Liquidation Safety Margin per Entry")
 avg_costs = df["Avg Entry Price"]
 liq_prices = df["Liq. Price"]
 margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
@@ -182,18 +181,18 @@ for i, val in enumerate(margin_pct):
 fig3.subplots_adjust(top=0.88)
 st.pyplot(fig3)
 
-# === 📌 收益总结 ===
-final_net_cost = df["总持仓额"].iloc[-1]
-final_quantity = ((df["加仓总额"] - df["交易手续费"]) / df["加仓价格"]).sum()
+# === Summary ===
+final_net_cost = df["Net Position"].iloc[-1]
+final_quantity = ((df["Position Size"] - df["Fee"]) / df["Entry Price"]).sum()
 final_close_fee = target_price * final_quantity * fee_rate
 final_profit = target_price * final_quantity - final_net_cost - final_close_fee
 final_roi = final_profit / total_capital
 
-st.subheader("📌 当 BTC 反弹至目标价格时")
+st.subheader("📌 Final Summary at Target Price")
 st.markdown(f"""
-- 🎯 目标反弹价格：`{target_price} USD`
-- 💰 当前持仓总成本（含手续费）：`{final_net_cost:.2f} USD`
-- 💸 总交易手续费（开+平）：`{total_fee + final_close_fee:.2f} USD`
-- 📈 持仓浮盈（净收益）：`{final_profit:.2f} USD`
-- 📊 总收益率（ROI）：`{final_roi * 100:.2f}%`
+- 🎯 Target Rebound Price: `{target_price} USD`
+- 💰 Net Position Cost (w/ fees): `{final_net_cost:.2f} USD`
+- 💸 Total Trading Fees (open+close): `{total_fee + final_close_fee:.2f} USD`
+- 📈 Net Profit: `{final_profit:.2f} USD`
+- 📊 Total ROI: `{final_roi * 100:.2f}%`
 """)
