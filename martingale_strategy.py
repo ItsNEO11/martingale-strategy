@@ -145,7 +145,7 @@ fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
 
 # === 📊 每轮加仓价格 vs 加仓头寸金额图
-st.markdown(r'<h3 style="font-size:20px;">📊每轮加仓价格 VS 加仓头寸金额</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">📊 每轮加仓价格 vs 加仓头寸金额</h3>', unsafe_allow_html=True)
 green_shades = ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45']
 green_cmap = LinearSegmentedColormap.from_list("green_shades", green_shades)
 
@@ -169,7 +169,7 @@ fig2.subplots_adjust(top=0.88)
 st.pyplot(fig2)
 
 # === 🛡️ 爆仓边界安全比例图
-st.markdown(r'<h3 style="font-size:20px;">🛡️每轮加仓后爆仓价格安全边界</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">🛡️ 每轮加仓后爆仓价格安全边界</h3>', unsafe_allow_html=True)
 avg_costs = df["平均成本"]
 liq_prices = df["爆仓价格"]
 margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
@@ -189,7 +189,7 @@ fig3.subplots_adjust(top=0.88)
 st.pyplot(fig3)
 
 # === 📌 收益总结
-st.markdown(r'<h3 style="font-size:20px;">📌当标的反弹至目标价格时</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">📌 当标的反弹至目标价格时</h3>', unsafe_allow_html=True)
 final_net_cost = df["总持仓额"].iloc[-1]
 final_quantity = ((df["加仓总额"] - df["交易手续费"]) / df["加仓价格"]).sum()
 final_close_fee = target_price * final_quantity * fee_rate
