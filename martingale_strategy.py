@@ -137,7 +137,7 @@ for step in range(1, num_entries + 1):
                  fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color, lw=1))
 
 # ✅ 目标反弹价线 & 辅助线
-ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="🎯 目标反弹价")
+ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 
 # ✅ 设置标题、坐标轴标签，并应用中文字体
