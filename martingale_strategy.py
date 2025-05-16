@@ -98,6 +98,7 @@ filename = f"martingale_strategy_result_{datetime.datetime.now().strftime('%Y%m%
 st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, mime="text/csv")
 
 # === ROI 曲线（多轮比较，含手续费）
+# === ROI 曲线（多轮比较，含手续费）
 st.subheader("📉 ROI 曲线图（含手续费）")
 rebound_range = np.arange(min(entry_prices), target_price + 3000, 200)
 if target_price not in rebound_range:
@@ -135,13 +136,20 @@ for step in range(1, num_entries + 1):
                  textcoords="offset points", xytext=(60, -30), ha='left',
                  fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color, lw=1))
 
+# ✅ 目标反弹价线 & 辅助线
 ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="🎯 目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
+
+# ✅ 设置标题、坐标轴标签，并应用中文字体
 ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
 ax1.set_xlabel("BTC价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
+
+# ✅ 设置图例，使用中文字体
+ax1.legend(prop=font_prop)
+
+# ✅ 样式与展示
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
-ax1.legend()
 fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
 
