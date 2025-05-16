@@ -141,7 +141,7 @@ ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 
 # ✅ 设置标题、坐标轴标签，并应用中文字体
-ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
+ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=12, weight='bold', fontproperties=font_prop)
 ax1.set_xlabel("BTC价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
 
@@ -165,7 +165,7 @@ colors = [green_cmap(val) for val in normed]
 
 fig2, ax2 = plt.subplots(figsize=(10, 5))
 bars = ax2.bar(prices, amounts, color=colors, width=200)
-ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold', fontproperties=font_prop)
+ax2.set_title("每轮加仓头寸金额", fontsize=12, weight='bold', fontproperties=font_prop)
 ax2.set_xlabel("加仓价格", fontsize=12, fontproperties=font_prop)
 ax2.set_ylabel("加仓头寸（USD）", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
@@ -186,7 +186,7 @@ margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
 
 fig3, ax3 = plt.subplots(figsize=(10, 5))
 ax3.plot(df["轮次"], margin_pct, marker='o', color='orange', linewidth=2.5)
-ax3.set_title("每轮加仓后爆仓边界安全比例", fontsize=14, weight='bold', fontproperties=font_prop)
+ax3.set_title("每轮加仓后爆仓边界安全比例", fontsize=12, weight='bold', fontproperties=font_prop)
 ax3.set_xlabel("加仓轮次", fontsize=12, fontproperties=font_prop)
 ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=12, fontproperties=font_prop)
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
