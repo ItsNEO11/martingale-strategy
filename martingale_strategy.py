@@ -15,7 +15,7 @@ if os.path.exists(font_path):
     plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
-st.title("📊 马丁格尔加仓策略可视化模拟")
+st.markdown('<h1 style="font-size:24px;">📊 马丁格尔加仓策略可视化模拟</h1>', unsafe_allow_html=True)
 st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
 
 # === Sidebar 参数输入 ===
@@ -137,8 +137,8 @@ for step in range(1, num_entries + 1):
 ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
-ax1.set_xlabel("BTC价格", fontsize=14, fontproperties=font_prop)
-ax1.set_ylabel("收益率 (%)", fontsize=14, fontproperties=font_prop)
+ax1.set_xlabel("BTC价格", fontsize=12, fontproperties=font_prop)
+ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
 ax1.legend(prop=font_prop)
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
 fig1.subplots_adjust(top=0.88)
@@ -157,8 +157,8 @@ colors = [green_cmap(val) for val in normed]
 fig2, ax2 = plt.subplots(figsize=(10, 5))
 bars = ax2.bar(prices, amounts, color=colors, width=200)
 ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold', fontproperties=font_prop)
-ax2.set_xlabel("加仓价格", fontsize=14, fontproperties=font_prop)
-ax2.set_ylabel("加仓头寸（USD）", fontsize=14, fontproperties=font_prop)
+ax2.set_xlabel("加仓价格", fontsize=12, fontproperties=font_prop)
+ax2.set_ylabel("加仓头寸（USD）", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
 ax2.set_ylim(0, amounts.max() * 1.15)
 for bar, amt in zip(bars, amounts):
@@ -177,8 +177,8 @@ margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
 fig3, ax3 = plt.subplots(figsize=(10, 5))
 ax3.plot(df["轮次"], margin_pct, marker='o', color='orange', linewidth=2.5)
 ax3.set_title("每轮加仓后爆仓边界安全比例", fontsize=14, weight='bold', fontproperties=font_prop)
-ax3.set_xlabel("加仓轮次", fontsize=14, fontproperties=font_prop)
-ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=14, fontproperties=font_prop)
+ax3.set_xlabel("加仓轮次", fontsize=12, fontproperties=font_prop)
+ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=12, fontproperties=font_prop)
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax3.set_ylim(0, margin_pct.max() * 1.15)
 for i, val in enumerate(margin_pct):
