@@ -99,9 +99,9 @@ colors = plt.cm.tab10.colors
 
 for step in range(1, num_entries + 1):
     sub_df = df.iloc[:step]
-    net_position_value = sub_df["总持仓额"].iloc[-1]
-    quantity = ((sub_df["加仓总额"] - sub_df["交易手续费"]) / sub_df["加仓价格"]).sum()
-    open_fee = sub_df["交易手续费"].sum()
+    net_position_value = sub_df["Net Position"].iloc[-1]
+    quantity = ((sub_df["Position Size"] - sub_df["Fee"]) / sub_df["Entry Price"]).sum()
+    open_fee = sub_df["Fee"].sum()
 
     roi_curve, profit_curve = [], []
     for p in rebound_range:
@@ -113,7 +113,7 @@ for step in range(1, num_entries + 1):
         profit_curve.append(profit)
 
     color = colors[(step - 1) % len(colors)]
-    ax1.plot(rebound_range, roi_curve, linewidth=2, label=f"前{step}轮加仓", color=color)
+    ax1.plot(rebound_range, roi_curve, linewidth=2, label=f"Up to Entry {step}", color=color)
 
     idx = np.abs(rebound_range - target_price).argmin()
     roi_at_target = roi_curve[idx]
@@ -126,11 +126,11 @@ for step in range(1, num_entries + 1):
                  textcoords="offset points", xytext=(60, -30), ha='left',
                  fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color, lw=1))
 
-ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="🎯 目标反弹价")
+ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="🎯 Target Price")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
-ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold')
-ax1.set_xlabel("BTC价格")
-ax1.set_ylabel("收益率 (%)")
+ax1.set_title("ROI Curve per Entry Round", fontsize=14, weight='bold')
+ax1.set_xlabel("BTC Price", fontsize=12)
+ax1.set_ylabel("ROI (%)", fontsize=12)
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
 ax1.legend()
 fig1.subplots_adjust(top=0.88)
@@ -141,16 +141,16 @@ st.subheader("📊 每轮加仓价格 vs 加仓头寸金额")
 green_shades = ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45']
 green_cmap = LinearSegmentedColormap.from_list("green_shades", green_shades)
 
-prices = df["加仓价格"]
-amounts = df["加仓总额"]
+prices = df["Entry Price"]
+amounts = df["Position Size"]
 normed = (amounts - amounts.min()) / (amounts.max() - amounts.min() + 1e-9)
 colors = [green_cmap(val) for val in normed]
 
 fig2, ax2 = plt.subplots(figsize=(10, 5))
 bars = ax2.bar(prices, amounts, color=colors, width=200)
-ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold')
-ax2.set_xlabel("加仓价格", fontsize=12)
-ax2.set_ylabel("加仓头寸（USD）", fontsize=12)
+ax2.set_title("Position Size per Entry", fontsize=14, weight='bold')
+ax2.set_xlabel("Entry Price", fontsize=12)
+ax2.set_ylabel("Position Size (USD)", fontsize=12)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
 ymax = amounts.max() * 1.15
 ax2.set_ylim(0, ymax)
@@ -161,21 +161,22 @@ for bar, amt in zip(bars, amounts):
 fig2.subplots_adjust(top=0.88)
 st.pyplot(fig2)
 
+
 # === 🛡️ 每轮加仓后的爆仓边界安全比例图 ===
 st.subheader("🛡️ 每轮加仓后爆仓价格安全边界")
-avg_costs = df["平均成本"]
-liq_prices = df["爆仓价格"]
+avg_costs = df["Avg Entry Price"]
+liq_prices = df["Liq. Price"]
 margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
 
 fig3, ax3 = plt.subplots(figsize=(10, 5))
-ax3.plot(df["轮次"], margin_pct, marker='o', color='orange', linewidth=2.5)
-ax3.set_title("每轮加仓后爆仓边界安全比例", fontsize=14, weight='bold')
-ax3.set_xlabel("加仓轮次", fontsize=12)
-ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=12)
+ax3.plot(df["Round"], margin_pct, marker='o', color='orange', linewidth=2.5)
+ax3.set_title("Safety Margin from Liquidation", fontsize=14, weight='bold')
+ax3.set_xlabel("Entry Round", fontsize=12)
+ax3.set_ylabel("Safety Margin (%)", fontsize=12)
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax3.set_ylim(0, margin_pct.max() * 1.15)
 for i, val in enumerate(margin_pct):
-    ax3.annotate(f"{val:.2f}%", (df["轮次"][i], val),
+    ax3.annotate(f"{val:.2f}%", (df["Round"][i], val),
                  textcoords="offset points", xytext=(0, 8),
                  ha='center', fontsize=10)
 fig3.subplots_adjust(top=0.88)
