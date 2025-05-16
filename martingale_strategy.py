@@ -76,7 +76,7 @@ for i in range(num_entries):
         "加仓金额": round(capital, 2),
         "杠杆": lev,
         "加仓总额": round(position_value, 2),
-        "交易手续费": round(open_fee, 2),
+        "手续费": round(open_fee, 2),
         "总持仓额": round(total_net_position, 2),
         "平均成本": round(avg_entry_price, 2),
         "平均杠杆": round(avg_leverage, 2),
@@ -98,7 +98,7 @@ filename = f"martingale_strategy_result_{datetime.datetime.now().strftime('%Y%m%
 st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, mime="text/csv")
 
 # === ROI 曲线
-st.markdown(r'<h3 style="font-size:20px;">📉 ROI 曲线图（含手续费）</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">📉 ROI曲线图（含手续费）</h3>', unsafe_allow_html=True)
 rebound_range = np.arange(min(entry_prices), target_price + 3000, 200)
 if target_price not in rebound_range:
     rebound_range = np.sort(np.append(rebound_range, target_price))
@@ -137,7 +137,7 @@ for step in range(1, num_entries + 1):
 ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
-ax1.set_xlabel("资产价格", fontsize=12, fontproperties=font_prop)
+ax1.set_xlabel("标的价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
 ax1.legend(prop=font_prop)
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
@@ -145,7 +145,7 @@ fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
 
 # === 📊 每轮加仓价格 vs 加仓头寸金额图
-st.markdown(r'<h3 style="font-size:20px;">📊 每轮加仓价格 vs 加仓头寸金额</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">📊每轮加仓价格 VS 加仓头寸金额</h3>', unsafe_allow_html=True)
 green_shades = ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45']
 green_cmap = LinearSegmentedColormap.from_list("green_shades", green_shades)
 
@@ -169,14 +169,14 @@ fig2.subplots_adjust(top=0.88)
 st.pyplot(fig2)
 
 # === 🛡️ 爆仓边界安全比例图
-st.markdown(r'<h3 style="font-size:20px;">🛡️ 每轮加仓后爆仓价格安全边界</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">🛡️每轮加仓后爆仓价格安全边界</h3>', unsafe_allow_html=True)
 avg_costs = df["平均成本"]
 liq_prices = df["爆仓价格"]
 margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
 
 fig3, ax3 = plt.subplots(figsize=(10, 5))
 ax3.plot(df["轮次"], margin_pct, marker='o', color='orange', linewidth=2.5)
-ax3.set_title("每轮加仓后爆仓边界安全比例", fontsize=14, weight='bold', fontproperties=font_prop)
+ax3.set_title("每轮加仓后距离爆仓边界比例", fontsize=14, weight='bold', fontproperties=font_prop)
 ax3.set_xlabel("加仓轮次", fontsize=12, fontproperties=font_prop)
 ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=12, fontproperties=font_prop)
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
@@ -189,7 +189,7 @@ fig3.subplots_adjust(top=0.88)
 st.pyplot(fig3)
 
 # === 📌 收益总结
-st.markdown(r'<h3 style="font-size:20px;">📌 当标的反弹至目标价格时</h3>', unsafe_allow_html=True)
+st.markdown(r'<h3 style="font-size:20px;">📌当标的反弹至目标价格时</h3>', unsafe_allow_html=True)
 final_net_cost = df["总持仓额"].iloc[-1]
 final_quantity = ((df["加仓总额"] - df["交易手续费"]) / df["加仓价格"]).sum()
 final_close_fee = target_price * final_quantity * fee_rate
