@@ -6,15 +6,18 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib import font_manager
 import datetime, json, os
 
-# === 中文字体设置 ===
+# === 中文字体容错设置 ===
 font_prop = None
 try:
-    font_path = os.path.join("fonts", "PingFangSC.ttf")  # 可替换为 NotoSansSC.ttf
-    if os.path.exists(font_path):
-        font_prop = font_manager.FontProperties(fname=font_path)
-        plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
-        plt.rcParams['axes.unicode_minus'] = False
-except:
+    default_fonts = ["PingFang SC", "Noto Sans CJK SC", "SimHei", "Microsoft YaHei"]
+    available_fonts = set(f.name for f in font_manager.fontManager.ttflist)
+    for name in default_fonts:
+        if name in available_fonts:
+            font_prop = font_manager.FontProperties(fname=font_manager.findfont(name))
+            plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
+            plt.rcParams['axes.unicode_minus'] = False
+            break
+except Exception:
     font_prop = None
 
 # === 参数保存/加载 ===
