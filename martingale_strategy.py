@@ -11,19 +11,17 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager
 
 font_prop = None
-preferred_fonts = ["PingFang SC", "Noto Sans CJK SC", "SimHei", "Microsoft YaHei"]
-
-try:
-    available_fonts = set(f.name for f in font_manager.fontManager.ttflist)
-    for name in preferred_fonts:
-        if name in available_fonts:
-            font_prop = font_manager.FontProperties(fname=font_manager.findfont(name))
-            plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
-            plt.rcParams['axes.unicode_minus'] = False
-            break
-except Exception as e:
+font_path = os.path.join("fonts", "NotoSansSC-Regular.otf")
+if os.path.exists(font_path):
+    try:
+        font_prop = font_manager.FontProperties(fname=font_path)
+        plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
+        plt.rcParams['axes.unicode_minus'] = False
+    except Exception as e:
+        font_prop = None
+else:
     font_prop = None
-
+    
 # === 参数保存/加载 ===
 PARAM_FILE = "saved_params.json"
 
