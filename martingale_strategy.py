@@ -31,7 +31,6 @@ st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
 st.markdown('<h1 style="font-size:26px;">📊 马丁格尔加仓策略可视化模拟</h1>', unsafe_allow_html=True)
 st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
 
-
 # === 加载上次保存的参数（如存在） ===
 saved = load_params()
 
@@ -44,9 +43,22 @@ mode = st.sidebar.radio(
     index=0 if saved.get("mode", "马丁加仓") == "马丁加仓" else 1
 )
 
-martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, saved.get("martin_ratio", 2.0), 0.1) if mode == "马丁加仓" else 1.0
+martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, saved.get("martin_ratio", 2.0), 0.1)
 num_entries = st.sidebar.slider("加仓轮次", 2, 10, saved.get("num_entries", 4))
-target_price = st.sidebar.number_input("目标反弹价格（USD）", value=saved.get("target_price", 15000), step=100)
+
+# === 🔧 自定义小数位数设置 ===
+st.sidebar.subheader("🔧 精度设置")
+decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2, 3, 4, 5, 6], index=saved.get("decimal_places", 2))
+step_size = 1 / (10 ** decimal_places)
+price_format = f"%.{decimal_places}f"
+
+# === 目标反弹价格（使用自定义精度）
+target_price = st.sidebar.number_input(
+    "目标反弹价格（USD）",
+    value=saved.get("target_price", 15000),
+    step=step_size,
+    format=price_format
+)
 
 # === 每轮加仓价格与杠杆设置 ===
 st.sidebar.subheader("每轮加仓价格与杠杆设置")
@@ -59,8 +71,9 @@ for i in range(num_entries):
     with col1:
         entry_prices.append(st.number_input(
             f"第{i+1}轮加仓价格",
-            value=saved.get(f"price_{i}", 14000 - i * 1000),
-            step=100,
+            value=saved.get(f"price_{i}", round(14000 - i * 1000, decimal_places)),
+            step=step_size,
+            format=price_format,
             key=f"{key_prefix}_price_{i}"
         ))
     with col2:
@@ -70,7 +83,7 @@ for i in range(num_entries):
             min_value=1, max_value=100, step=1,
             key=f"{key_prefix}_lev_{i}"
         ))
-        
+
 # === 保存按钮 ===
 if st.sidebar.button("💾 保存当前参数设置"):
     param_to_save = {
@@ -79,13 +92,14 @@ if st.sidebar.button("💾 保存当前参数设置"):
         "martin_ratio": martin_ratio,
         "num_entries": num_entries,
         "target_price": target_price,
+        "decimal_places": decimal_places,
     }
     for i in range(num_entries):
         param_to_save[f"price_{i}"] = entry_prices[i]
         param_to_save[f"lev_{i}"] = leverage_list[i]
     save_params(param_to_save)
     st.sidebar.success("✅ 参数保存成功！")
-    
+
 
 # === 资金分配
 if mode == "固定金额":
