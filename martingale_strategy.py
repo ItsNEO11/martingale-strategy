@@ -38,7 +38,7 @@ st.sidebar.header("策略参数设置")
 total_capital = st.sidebar.number_input(
     "总本金（USD）",
     value=float(saved.get("total_capital", 10000)),
-    step=500
+    step=500.0
 )
 
 mode = st.sidebar.radio(
