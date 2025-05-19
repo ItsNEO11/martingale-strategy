@@ -180,9 +180,9 @@ csv = df.to_csv(index=False).encode('utf-8-sig')
 filename = f"martingale_strategy_result_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
 st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, mime="text/csv")
 
-# === ROI 曲线
+# === ROI 曲线图（含手续费）
 st.markdown(r'<h3 style="font-size:20px;">📉 ROI曲线图（含手续费）</h3>', unsafe_allow_html=True)
-rebound_range = np.arange(min(entry_prices), target_price + 3000, 200)
+rebound_range = np.arange(min(entry_prices), target_price + abs(target_price) * 0.2, abs(target_price) * 0.01)
 if target_price not in rebound_range:
     rebound_range = np.sort(np.append(rebound_range, target_price))
 
@@ -224,10 +224,15 @@ ax1.set_xlabel("标的价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
 ax1.legend(prop=font_prop)
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
+
+# ✅ 横轴自适应范围与刻度格式
+ax1.set_xlim(rebound_range.min(), rebound_range.max())
+ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
+
 fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
 
-# === 📊 每轮加仓价格 vs 加仓头寸金额图
+# === 每轮加仓价格 vs 加仓头寸金额图
 st.markdown(r'<h3 style="font-size:20px;">📊 每轮加仓价格 vs 加仓头寸金额</h3>', unsafe_allow_html=True)
 green_shades = ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45']
 green_cmap = LinearSegmentedColormap.from_list("green_shades", green_shades)
@@ -238,16 +243,22 @@ normed = (amounts - amounts.min()) / (amounts.max() - amounts.min() + 1e-9)
 colors = [green_cmap(val) for val in normed]
 
 fig2, ax2 = plt.subplots(figsize=(10, 5))
-bars = ax2.bar(prices, amounts, color=colors, width=200)
+bars = ax2.bar(prices, amounts, color=colors, width=abs(prices.max() - prices.min()) * 0.05)
 ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold', fontproperties=font_prop)
 ax2.set_xlabel("加仓价格", fontsize=12, fontproperties=font_prop)
 ax2.set_ylabel("加仓头寸（USD）", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
 ax2.set_ylim(0, amounts.max() * 1.15)
+
+# ✅ 横轴格式与范围自适应
+ax2.set_xlim(prices.min() - 0.5, prices.max() + 0.5)
+ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
+
 for bar, amt in zip(bars, amounts):
     height = bar.get_height()
     ax2.text(bar.get_x() + bar.get_width()/2, height + 5,
              f"{int(amt):,}", ha='center', va='bottom', fontsize=9)
+
 fig2.subplots_adjust(top=0.88)
 st.pyplot(fig2)
 
