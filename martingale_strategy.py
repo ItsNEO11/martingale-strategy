@@ -45,10 +45,10 @@ mode = st.sidebar.radio("加仓方式", ["马丁加仓", "固定金额"],
 martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, float(saved.get("martin_ratio", 2.0)), 0.1)
 num_entries = st.sidebar.slider("加仓轮次", 2, 10, int(saved.get("num_entries", 4)))
 
-# === 限制最多两位小数
-st.sidebar.subheader("🔧 精度设置")
-st.sidebar.caption("⚠️ 仅支持最多两位小数，以提高性能")
-decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2], index=min(int(saved.get("decimal_places", 2)), 2))
+# === 价格精度设置
+st.sidebar.subheader("价格精度设置")
+st.sidebar.caption("⚠️ 通过设置价格小数位适应价格极小的资产，如MEME币等")
+decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2, 3, 4, 5, 6], index=int(saved.get("decimal_places", 2)))
 step_size = 1 / (10 ** decimal_places)
 price_format = f"%.{decimal_places}f"
 
@@ -151,15 +151,21 @@ st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, 
 
 # === 后续图表绘制（ROI 图、爆仓图等）保持不变 ===
 # === ROI 曲线图
+# === ROI 曲线图
 st.markdown(r'<h3 style="font-size:20px;">📉 ROI曲线图（含手续费）</h3>', unsafe_allow_html=True)
 min_price = min(entry_prices)
 x_margin = (target_price - min_price) * 0.6
 x_left = min_price - x_margin * 0.1
 x_right = target_price + x_margin * 1.2
-rebound_range = np.arange(x_left, x_right, step_size)
+
+# ✅ 替代 np.arange，防止因 step_size 太小造成卡顿
+num_points = 800  # 控制计算数量，推荐 500~2000
+rebound_range = np.linspace(x_left, x_right, num=num_points)
+
 if target_price not in rebound_range:
     rebound_range = np.sort(np.append(rebound_range, target_price))
 
+# ↓ 以下图表绘制逻辑保持不变
 fig1, ax1 = plt.subplots(figsize=(10, 5))
 colors = plt.cm.tab10.colors
 max_roi = 0
@@ -179,7 +185,7 @@ for step in range(1, num_entries + 1):
         profit_curve.append(profit)
 
     color = colors[(step - 1) % len(colors)]
-    ax1.plot(rebound_range, roi_curve, linewidth=2, label=f"Entry Step {step} ", color=color)
+    ax1.plot(rebound_range, roi_curve, linewidth=2, label=f"Entry Step {step}", color=color)
 
     idx = np.abs(rebound_range - target_price).argmin()
     roi_at_target = roi_curve[idx]
@@ -242,7 +248,12 @@ ax3.set_title("Liquidation Safety Margin per Entry", fontsize=14, weight='bold',
 ax3.set_xlabel("Entry Step", fontsize=12, fontproperties=font_prop)
 ax3.set_ylabel("Safety Margin (%)", fontsize=12, fontproperties=font_prop)
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
-ax3.set_ylim(0, margin_pct.max() * 1.15)
+# 安全设置 Y 轴范围，避免 NaN/Inf 报错
+ymax = margin_pct.max()
+if pd.isna(ymax) or np.isinf(ymax):
+    ymax = 1.0
+ax3.set_ylim(0, ymax * 1.15)
+
 for i, val in enumerate(margin_pct):
     ax3.annotate(f"{val:.2f}%", (df["轮次"][i], val), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=10)
 fig3.subplots_adjust(top=0.88)
