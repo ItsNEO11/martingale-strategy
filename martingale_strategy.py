@@ -31,25 +31,46 @@ st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
 st.markdown('<h1 style="font-size:26px;">📊 马丁格尔加仓策略可视化模拟</h1>', unsafe_allow_html=True)
 st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
 
+
 # === 加载上次保存的参数（如存在） ===
 saved = load_params()
 
 st.sidebar.header("策略参数设置")
 total_capital = st.sidebar.number_input("总本金（USD）", value=saved.get("total_capital", 10000), step=500)
-mode = st.sidebar.radio("加仓方式", ["马丁加仓", "固定金额"], index=0 if saved.get("mode", "马丁加仓") == "马丁加仓" else 1)
+
+mode = st.sidebar.radio(
+    "加仓方式",
+    ["马丁加仓", "固定金额"],
+    index=0 if saved.get("mode", "马丁加仓") == "马丁加仓" else 1
+)
+
 martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, saved.get("martin_ratio", 2.0), 0.1) if mode == "马丁加仓" else 1.0
 num_entries = st.sidebar.slider("加仓轮次", 2, 10, saved.get("num_entries", 4))
 target_price = st.sidebar.number_input("目标反弹价格（USD）", value=saved.get("target_price", 15000), step=100)
 
+# === 每轮加仓价格与杠杆设置 ===
 st.sidebar.subheader("每轮加仓价格与杠杆设置")
 entry_prices, leverage_list = [], []
+
+key_prefix = f"v{num_entries}_{mode.replace(' ', '_')}"
+
 for i in range(num_entries):
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        entry_prices.append(st.number_input(f"第{i+1}轮加仓价格", value=saved.get(f"price_{i}", 14000 - i * 1000), step=100, key=f"price_{i}"))
+        entry_prices.append(st.number_input(
+            f"第{i+1}轮加仓价格",
+            value=saved.get(f"price_{i}", 14000 - i * 1000),
+            step=100,
+            key=f"{key_prefix}_price_{i}"
+        ))
     with col2:
-        leverage_list.append(st.number_input(f"第{i+1}轮杠杆", value=saved.get(f"lev_{i}", 5 if i == 0 else 10), min_value=1, max_value=100, step=1, key=f"lev_{i}"))
-
+        leverage_list.append(st.number_input(
+            f"第{i+1}轮杠杆",
+            value=saved.get(f"lev_{i}", 5 if i == 0 else 10),
+            min_value=1, max_value=100, step=1,
+            key=f"{key_prefix}_lev_{i}"
+        ))
+        
 # === 保存按钮 ===
 if st.sidebar.button("💾 保存当前参数设置"):
     param_to_save = {
@@ -57,7 +78,7 @@ if st.sidebar.button("💾 保存当前参数设置"):
         "mode": mode,
         "martin_ratio": martin_ratio,
         "num_entries": num_entries,
-        "target_price": target_price
+        "target_price": target_price,
     }
     for i in range(num_entries):
         param_to_save[f"price_{i}"] = entry_prices[i]
