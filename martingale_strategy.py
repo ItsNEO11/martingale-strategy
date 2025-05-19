@@ -182,12 +182,20 @@ st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, 
 
 # === ROI 曲线图（含手续费）
 st.markdown(r'<h3 style="font-size:20px;">📉 ROI曲线图（含手续费）</h3>', unsafe_allow_html=True)
-rebound_range = np.arange(min(entry_prices), target_price + abs(target_price) * 0.2, abs(target_price) * 0.01)
+
+# 动态反弹价格区间
+min_price = min(entry_prices)
+x_range_margin = (target_price - min_price) * 0.6
+x_left = min_price - x_range_margin * 0.1
+x_right = target_price + x_range_margin * 1.2
+rebound_range = np.arange(x_left, x_right, step_size)
+
 if target_price not in rebound_range:
     rebound_range = np.sort(np.append(rebound_range, target_price))
 
 fig1, ax1 = plt.subplots(figsize=(10, 5))
 colors = plt.cm.tab10.colors
+max_roi = 0
 
 for step in range(1, num_entries + 1):
     sub_df = df.iloc[:step]
@@ -209,6 +217,7 @@ for step in range(1, num_entries + 1):
     idx = np.abs(rebound_range - target_price).argmin()
     roi_at_target = roi_curve[idx]
     profit_at_target = profit_curve[idx]
+    max_roi = max(max_roi, roi_at_target)
 
     ax1.annotate(f"ROI: {roi_at_target:.2f}%", (target_price, roi_at_target),
                  textcoords="offset points", xytext=(-60, 20), ha='right',
@@ -217,20 +226,22 @@ for step in range(1, num_entries + 1):
                  textcoords="offset points", xytext=(60, -30), ha='left',
                  fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color, lw=1))
 
+# 目标线 & 轴设置
 ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
+ax1.set_xlim(x_left, x_right)
+ax1.set_ylim(-10, max_roi * 1.4 if max_roi > 0 else 20)  # ROI 范围自动适应
+ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
+
+# 标题、图例、美化
 ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
 ax1.set_xlabel("标的价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
-ax1.legend(prop=font_prop)
+ax1.legend(prop=font_prop, loc="best")  # ✅ 自动最佳图例位置
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
-
-# ✅ 横轴自适应范围与刻度格式
-ax1.set_xlim(rebound_range.min(), rebound_range.max())
-ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
-
 fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
+
 
 # === 每轮加仓价格 vs 加仓头寸金额图
 st.markdown(r'<h3 style="font-size:20px;">📊 每轮加仓价格 vs 加仓头寸金额</h3>', unsafe_allow_html=True)
