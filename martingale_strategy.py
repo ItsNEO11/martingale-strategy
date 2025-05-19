@@ -227,7 +227,7 @@ ax2.set_xlim(x_min, x_max)
 ax2.set_ylim(0, amounts.max() * 1.15)
 ax2.set_title("Position Size by Entry Price", fontsize=14, weight='bold', fontproperties=font_prop)
 ax2.set_xlabel("Entry Price", fontsize=12, fontproperties=font_prop)
-ax2.set_ylabel("Position Size (USD）", fontsize=12, fontproperties=font_prop)
+ax2.set_ylabel("Position Size (USD)", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
 for bar, amt in zip(bars, amounts):
     height = bar.get_height()
