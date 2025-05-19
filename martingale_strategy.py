@@ -253,21 +253,30 @@ amounts = df["加仓总额"]
 normed = (amounts - amounts.min()) / (amounts.max() - amounts.min() + 1e-9)
 colors = [green_cmap(val) for val in normed]
 
+# 自动计算宽度和左右留白比例
+price_span = prices.max() - prices.min()
+bar_width = price_span * 0.05 if price_span > 0 else 1
+x_min = prices.min() - bar_width * 1.5
+x_max = prices.max() + bar_width * 1.5
+
 fig2, ax2 = plt.subplots(figsize=(10, 5))
-bars = ax2.bar(prices, amounts, color=colors, width=abs(prices.max() - prices.min()) * 0.05)
+bars = ax2.bar(prices, amounts, color=colors, width=bar_width)
+
 ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold', fontproperties=font_prop)
 ax2.set_xlabel("加仓价格", fontsize=12, fontproperties=font_prop)
 ax2.set_ylabel("加仓头寸（USD）", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
-ax2.set_ylim(0, amounts.max() * 1.15)
 
-# ✅ 横轴格式与范围自适应
-ax2.set_xlim(prices.min() - 0.5, prices.max() + 0.5)
+# ✅ 横轴范围与刻度格式自适应
+ax2.set_xlim(x_min, x_max)
 ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
+
+# Y轴留白
+ax2.set_ylim(0, amounts.max() * 1.15)
 
 for bar, amt in zip(bars, amounts):
     height = bar.get_height()
-    ax2.text(bar.get_x() + bar.get_width()/2, height + 5,
+    ax2.text(bar.get_x() + bar.get_width() / 2, height + 5,
              f"{int(amt):,}", ha='center', va='bottom', fontsize=9)
 
 fig2.subplots_adjust(top=0.88)
