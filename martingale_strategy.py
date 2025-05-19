@@ -3,11 +3,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-import datetime
 from matplotlib import font_manager
-import os
-import json
+import datetime, json, os
 
+# === 中文字体设置 ===
+font_prop = None
+try:
+    font_path = os.path.join("fonts", "PingFangSC.ttf")  # 可替换为 NotoSansSC.ttf
+    if os.path.exists(font_path):
+        font_prop = font_manager.FontProperties(fname=font_path)
+        plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
+        plt.rcParams['axes.unicode_minus'] = False
+except:
+    font_prop = None
+
+# === 参数保存/加载 ===
 PARAM_FILE = "saved_params.json"
 
 def save_params(params: dict, file_path=PARAM_FILE):
@@ -20,65 +30,33 @@ def load_params(file_path=PARAM_FILE):
             return json.load(f)
     return {}
 
-# ✅ 设置中文字体为 PingFangSC.ttf（部署于 Streamlit Cloud 时自动加载）
-font_path = os.path.join("fonts", "PingFangSC.ttf")
-if os.path.exists(font_path):
-    font_prop = font_manager.FontProperties(fname=font_path)
-    plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
-    plt.rcParams['axes.unicode_minus'] = False
-
+# === 页面设置 ===
 st.set_page_config(page_title="马丁格尔策略模拟器", layout="wide")
 st.markdown('<h1 style="font-size:26px;">📊 马丁格尔加仓策略可视化模拟</h1>', unsafe_allow_html=True)
 st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手续费**")
 
-# === 加载上次保存的参数（如存在） ===
+# === 参数输入 ===
 saved = load_params()
-
 st.sidebar.header("策略参数设置")
-total_capital = st.sidebar.number_input(
-    "总本金（USD）",
-    value=float(saved.get("total_capital", 10000)),
-    step=500.0
-)
+total_capital = st.sidebar.number_input("总本金（USD）", value=float(saved.get("total_capital", 10000)), step=100.0)
 
-mode = st.sidebar.radio(
-    "加仓方式",
-    ["马丁加仓", "固定金额"],
-    index=0 if saved.get("mode", "马丁加仓") == "马丁加仓" else 1
-)
+mode = st.sidebar.radio("加仓方式", ["马丁加仓", "固定金额"],
+                        index=0 if saved.get("mode", "马丁加仓") == "马丁加仓" else 1)
+martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, float(saved.get("martin_ratio", 2.0)), 0.1)
+num_entries = st.sidebar.slider("加仓轮次", 2, 10, int(saved.get("num_entries", 4)))
 
-martin_ratio = st.sidebar.slider(
-    "马丁倍率",
-    1.0, 3.0,
-    float(saved.get("martin_ratio", 2.0)),
-    0.1
-)
-
-num_entries = st.sidebar.slider(
-    "加仓轮次",
-    2, 10,
-    int(saved.get("num_entries", 4))
-)
-
-# === 🔧 小数位数自定义
+# === 小数位设置
 st.sidebar.subheader("🔧 精度设置")
-decimal_places = st.sidebar.selectbox(
-    "价格小数位数",
-    options=[0, 1, 2, 3, 4, 5, 6],
-    index=int(saved.get("decimal_places", 2))
-)
+decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2, 3, 4, 5, 6], index=int(saved.get("decimal_places", 2)))
 step_size = 1 / (10 ** decimal_places)
 price_format = f"%.{decimal_places}f"
 
 # === 目标反弹价格
-target_price = st.sidebar.number_input(
-    "目标反弹价格（USD）",
-    value=float(saved.get("target_price", 15000)),
-    step=step_size,
-    format=price_format
-)
+target_price = st.sidebar.number_input("目标反弹价格（USD）",
+                                       value=float(saved.get("target_price", 15000)),
+                                       step=step_size, format=price_format)
 
-# === 每轮加仓价格与杠杆设置
+# === 每轮加仓价格与杠杆 ===
 st.sidebar.subheader("每轮加仓价格与杠杆设置")
 entry_prices, leverage_list = [], []
 key_prefix = f"v{num_entries}_{mode.replace(' ', '_')}"
@@ -86,24 +64,15 @@ key_prefix = f"v{num_entries}_{mode.replace(' ', '_')}"
 for i in range(num_entries):
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        entry_prices.append(st.number_input(
-            f"第{i+1}轮加仓价格",
-            value=float(saved.get(f"price_{i}", round(14000 - i * 1000, decimal_places))),
-            step=step_size,
-            format=price_format,
-            key=f"{key_prefix}_price_{i}"
-        ))
+        entry_prices.append(st.number_input(f"第{i+1}轮加仓价格",
+                                            value=float(saved.get(f"price_{i}", round(14000 - i * 1000, decimal_places))),
+                                            step=step_size, format=price_format, key=f"{key_prefix}_price_{i}"))
     with col2:
-        leverage_list.append(st.number_input(
-            f"第{i+1}轮杠杆",
-            value=int(saved.get(f"lev_{i}", 5 if i == 0 else 10)),
-            min_value=1,
-            max_value=100,
-            step=1,
-            key=f"{key_prefix}_lev_{i}"
-        ))
+        leverage_list.append(st.number_input(f"第{i+1}轮杠杆",
+                                             value=int(saved.get(f"lev_{i}", 5 if i == 0 else 10)),
+                                             min_value=1, max_value=100, step=1, key=f"{key_prefix}_lev_{i}"))
 
-# === 保存按钮 ===
+# === 保存按钮
 if st.sidebar.button("💾 保存当前参数设置"):
     param_to_save = {
         "total_capital": total_capital,
@@ -119,14 +88,14 @@ if st.sidebar.button("💾 保存当前参数设置"):
     save_params(param_to_save)
     st.sidebar.success("✅ 参数保存成功！")
 
-# === 资金分配
+# === 资金分配计算
 if mode == "固定金额":
     capital_distribution = [total_capital / num_entries] * num_entries
 else:
     weights = [martin_ratio ** i for i in range(num_entries)]
     capital_distribution = [total_capital * (w / sum(weights)) for w in weights]
 
-# === 策略模拟（含手续费，净仓位计算）
+# === 仓位计算
 fee_rate = 0.0005
 total_net_position = 0
 total_quantity = 0
@@ -174,22 +143,19 @@ df = pd.DataFrame(records)
 st.markdown(r'<h3 style="font-size:20px;">📈 策略模拟结果表</h3>', unsafe_allow_html=True)
 st.dataframe(df, use_container_width=True)
 
-# === 💾 导出策略明细 CSV 文件 ===
+# === 导出按钮
 st.markdown(r'<h3 style="font-size:20px;">📤 导出策略明细</h3>', unsafe_allow_html=True)
 csv = df.to_csv(index=False).encode('utf-8-sig')
 filename = f"martingale_strategy_result_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
 st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, mime="text/csv")
 
-# === ROI 曲线图（含手续费）
+# === ROI 曲线图
 st.markdown(r'<h3 style="font-size:20px;">📉 ROI曲线图（含手续费）</h3>', unsafe_allow_html=True)
-
-# 动态反弹价格区间
 min_price = min(entry_prices)
-x_range_margin = (target_price - min_price) * 0.6
-x_left = min_price - x_range_margin * 0.1
-x_right = target_price + x_range_margin * 1.2
+x_margin = (target_price - min_price) * 0.6
+x_left = min_price - x_margin * 0.1
+x_right = target_price + x_margin * 1.2
 rebound_range = np.arange(x_left, x_right, step_size)
-
 if target_price not in rebound_range:
     rebound_range = np.sort(np.append(rebound_range, target_price))
 
@@ -201,8 +167,8 @@ for step in range(1, num_entries + 1):
     sub_df = df.iloc[:step]
     net_position_value = sub_df["总持仓额"].iloc[-1]
     quantity = ((sub_df["加仓总额"] - sub_df["手续费"]) / sub_df["加仓价格"]).sum()
-
     roi_curve, profit_curve = [], []
+
     for p in rebound_range:
         total_value = p * quantity
         close_fee = total_value * fee_rate
@@ -221,64 +187,45 @@ for step in range(1, num_entries + 1):
 
     ax1.annotate(f"ROI: {roi_at_target:.2f}%", (target_price, roi_at_target),
                  textcoords="offset points", xytext=(-60, 20), ha='right',
-                 fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color, lw=1))
+                 fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color))
     ax1.annotate(f"Profit: ${profit_at_target:.0f}", (target_price, roi_at_target),
                  textcoords="offset points", xytext=(60, -30), ha='left',
-                 fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color, lw=1))
+                 fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color))
 
-# 目标线 & 轴设置
 ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax1.set_xlim(x_left, x_right)
-ax1.set_ylim(-10, max_roi * 1.4 if max_roi > 0 else 20)  # ROI 范围自动适应
-ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
-
-# 标题、图例、美化
+ax1.set_ylim(-10, max_roi * 1.4 if max_roi > 0 else 20)
 ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
 ax1.set_xlabel("标的价格", fontsize=12, fontproperties=font_prop)
 ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
-ax1.legend(prop=font_prop, loc="best")  # ✅ 自动最佳图例位置
+ax1.legend(prop=font_prop, loc="best")
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
 fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
 
-
 # === 每轮加仓价格 vs 加仓头寸金额图
 st.markdown(r'<h3 style="font-size:20px;">📊 每轮加仓价格 vs 加仓头寸金额</h3>', unsafe_allow_html=True)
-green_shades = ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45']
-green_cmap = LinearSegmentedColormap.from_list("green_shades", green_shades)
-
-prices = df["加仓价格"]
-amounts = df["加仓总额"]
+green_cmap = LinearSegmentedColormap.from_list("green_shades",
+    ['#e6f4ea', '#c7e9c0', '#a8ddb5', '#74c476', '#4daf4a', '#238b45'])
+prices, amounts = df["加仓价格"], df["加仓总额"]
 normed = (amounts - amounts.min()) / (amounts.max() - amounts.min() + 1e-9)
 colors = [green_cmap(val) for val in normed]
-
-# 自动计算宽度和左右留白比例
-price_span = prices.max() - prices.min()
-bar_width = price_span * 0.05 if price_span > 0 else 1
-x_min = prices.min() - bar_width * 1.5
-x_max = prices.max() + bar_width * 1.5
+bar_width = (prices.max() - prices.min()) * 0.05 if prices.max() > prices.min() else 1
+x_min, x_max = prices.min() - bar_width * 1.5, prices.max() + bar_width * 1.5
 
 fig2, ax2 = plt.subplots(figsize=(10, 5))
 bars = ax2.bar(prices, amounts, color=colors, width=bar_width)
-
+ax2.set_xlim(x_min, x_max)
+ax2.set_ylim(0, amounts.max() * 1.15)
 ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold', fontproperties=font_prop)
 ax2.set_xlabel("加仓价格", fontsize=12, fontproperties=font_prop)
 ax2.set_ylabel("加仓头寸（USD）", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
-
-# ✅ 横轴范围与刻度格式自适应
-ax2.set_xlim(x_min, x_max)
-ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.{decimal_places}f}"))
-
-# Y轴留白
-ax2.set_ylim(0, amounts.max() * 1.15)
-
 for bar, amt in zip(bars, amounts):
     height = bar.get_height()
     ax2.text(bar.get_x() + bar.get_width() / 2, height + 5,
              f"{int(amt):,}", ha='center', va='bottom', fontsize=9)
-
 fig2.subplots_adjust(top=0.88)
 st.pyplot(fig2)
 
@@ -296,9 +243,7 @@ ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=12, fontproperties=fo
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax3.set_ylim(0, margin_pct.max() * 1.15)
 for i, val in enumerate(margin_pct):
-    ax3.annotate(f"{val:.2f}%", (df["轮次"][i], val),
-                 textcoords="offset points", xytext=(0, 8),
-                 ha='center', fontsize=10)
+    ax3.annotate(f"{val:.2f}%", (df["轮次"][i], val), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=10)
 fig3.subplots_adjust(top=0.88)
 st.pyplot(fig3)
 
