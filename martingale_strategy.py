@@ -6,10 +6,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib import font_manager
 import datetime, json, os
 
-# === 中文字体容错设置（支持本地与云端）===
-import matplotlib.pyplot as plt
-from matplotlib import font_manager
-
+# === 中文字体加载（支持 Streamlit Cloud）===
 font_prop = None
 font_path = os.path.join("fonts", "NotoSansSC-Regular.otf")
 if os.path.exists(font_path):
@@ -17,15 +14,13 @@ if os.path.exists(font_path):
         font_prop = font_manager.FontProperties(fname=font_path)
         plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
         plt.rcParams['axes.unicode_minus'] = False
-    except Exception as e:
+    except Exception:
         font_prop = None
-else:
-    font_prop = None
-    
-# === 参数保存/加载 ===
+
+# === 参数保存/读取 ===
 PARAM_FILE = "saved_params.json"
 
-def save_params(params: dict, file_path=PARAM_FILE):
+def save_params(params, file_path=PARAM_FILE):
     with open(file_path, "w", encoding='utf-8') as f:
         json.dump(params, f, indent=2)
 
@@ -50,9 +45,10 @@ mode = st.sidebar.radio("加仓方式", ["马丁加仓", "固定金额"],
 martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, float(saved.get("martin_ratio", 2.0)), 0.1)
 num_entries = st.sidebar.slider("加仓轮次", 2, 10, int(saved.get("num_entries", 4)))
 
-# === 小数位设置
+# === 限制最多两位小数
 st.sidebar.subheader("🔧 精度设置")
-decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2, 3, 4, 5, 6], index=int(saved.get("decimal_places", 2)))
+st.sidebar.caption("⚠️ 仅支持最多两位小数，以提高性能")
+decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2], index=min(int(saved.get("decimal_places", 2)), 2))
 step_size = 1 / (10 ** decimal_places)
 price_format = f"%.{decimal_places}f"
 
@@ -93,14 +89,14 @@ if st.sidebar.button("💾 保存当前参数设置"):
     save_params(param_to_save)
     st.sidebar.success("✅ 参数保存成功！")
 
-# === 资金分配计算
+# === 资金分配
 if mode == "固定金额":
     capital_distribution = [total_capital / num_entries] * num_entries
 else:
     weights = [martin_ratio ** i for i in range(num_entries)]
     capital_distribution = [total_capital * (w / sum(weights)) for w in weights]
 
-# === 仓位计算
+# === 仓位与成本模拟
 fee_rate = 0.0005
 total_net_position = 0
 total_quantity = 0
@@ -144,16 +140,16 @@ for i in range(num_entries):
 
 df = pd.DataFrame(records)
 
-# === 表格展示
-st.markdown(r'<h3 style="font-size:20px;">📈 策略模拟结果表</h3>', unsafe_allow_html=True)
+# === 展示结果表
+st.markdown("### 📈 策略模拟结果表")
 st.dataframe(df, use_container_width=True)
 
-# === 导出按钮
-st.markdown(r'<h3 style="font-size:20px;">📤 导出策略明细</h3>', unsafe_allow_html=True)
+# === 下载按钮
 csv = df.to_csv(index=False).encode('utf-8-sig')
-filename = f"martingale_strategy_result_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+filename = f"martingale_strategy_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.csv"
 st.download_button("📥 下载策略明细 CSV", data=csv, file_name=filename, mime="text/csv")
 
+# === 后续图表绘制（ROI 图、爆仓图等）保持不变 ===
 # === ROI 曲线图
 st.markdown(r'<h3 style="font-size:20px;">📉 ROI曲线图（含手续费）</h3>', unsafe_allow_html=True)
 min_price = min(entry_prices)
