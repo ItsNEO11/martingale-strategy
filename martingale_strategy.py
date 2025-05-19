@@ -185,7 +185,7 @@ for step in range(1, num_entries + 1):
         profit_curve.append(profit)
 
     color = colors[(step - 1) % len(colors)]
-    ax1.plot(rebound_range, roi_curve, linewidth=2, label=f"前{step}轮加仓", color=color)
+    ax1.plot(rebound_range, roi_curve, linewidth=2, label=f"Entry Step {step} ", color=color)
 
     idx = np.abs(rebound_range - target_price).argmin()
     roi_at_target = roi_curve[idx]
@@ -199,14 +199,14 @@ for step in range(1, num_entries + 1):
                  textcoords="offset points", xytext=(60, -30), ha='left',
                  fontsize=9, color=color, arrowprops=dict(arrowstyle='->', color=color))
 
-ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★目标反弹价")
+ax1.axvline(target_price, color='red', linestyle='--', linewidth=1.5, label="★Target Price")
 ax1.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax1.set_xlim(x_left, x_right)
 ax1.set_ylim(-10, max_roi * 1.4 if max_roi > 0 else 20)
-ax1.set_title("分轮加仓后 ROI 曲线对比（含手续费）", fontsize=14, weight='bold', fontproperties=font_prop)
-ax1.set_xlabel("标的价格", fontsize=12, fontproperties=font_prop)
-ax1.set_ylabel("收益率 (%)", fontsize=12, fontproperties=font_prop)
-ax1.legend(prop=font_prop, loc="best")
+ax1.set_title("ROI Curve by Entry Steps (Including Fees)", fontsize=14, weight='bold', fontproperties=font_prop)
+ax1.set_xlabel("Price", fontsize=12, fontproperties=font_prop)
+ax1.set_ylabel("Return on Investment (%)", fontsize=12, fontproperties=font_prop)
+ax1.legend(loc="best")
 ax1.grid(True, linestyle='--', linewidth=0.5, color='lightgray')
 fig1.subplots_adjust(top=0.88)
 st.pyplot(fig1)
@@ -225,9 +225,9 @@ fig2, ax2 = plt.subplots(figsize=(10, 5))
 bars = ax2.bar(prices, amounts, color=colors, width=bar_width)
 ax2.set_xlim(x_min, x_max)
 ax2.set_ylim(0, amounts.max() * 1.15)
-ax2.set_title("每轮加仓头寸金额", fontsize=14, weight='bold', fontproperties=font_prop)
-ax2.set_xlabel("加仓价格", fontsize=12, fontproperties=font_prop)
-ax2.set_ylabel("加仓头寸（USD）", fontsize=12, fontproperties=font_prop)
+ax2.set_title("Position Size by Entry Price", fontsize=14, weight='bold', fontproperties=font_prop)
+ax2.set_xlabel("Entry Price", fontsize=12, fontproperties=font_prop)
+ax2.set_ylabel("Position Size (USD）", fontsize=12, fontproperties=font_prop)
 ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='lightgray')
 for bar, amt in zip(bars, amounts):
     height = bar.get_height()
@@ -244,9 +244,9 @@ margin_pct = ((avg_costs - liq_prices) / avg_costs * 100).round(2)
 
 fig3, ax3 = plt.subplots(figsize=(10, 5))
 ax3.plot(df["轮次"], margin_pct, marker='o', color='orange', linewidth=2.5)
-ax3.set_title("每轮加仓后距离爆仓边界比例", fontsize=14, weight='bold', fontproperties=font_prop)
-ax3.set_xlabel("加仓轮次", fontsize=12, fontproperties=font_prop)
-ax3.set_ylabel("距离爆仓的安全边际 (%)", fontsize=12, fontproperties=font_prop)
+ax3.set_title("Liquidation Safety Margin per Entry", fontsize=14, weight='bold', fontproperties=font_prop)
+ax3.set_xlabel("Entry Step", fontsize=12, fontproperties=font_prop)
+ax3.set_ylabel("Safety Margin (%)", fontsize=12, fontproperties=font_prop)
 ax3.axhline(0, color='gray', linestyle='--', linewidth=1)
 ax3.set_ylim(0, margin_pct.max() * 1.15)
 for i, val in enumerate(margin_pct):
