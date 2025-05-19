@@ -35,7 +35,11 @@ st.markdown("💡 所有计算结果已纳入 **0.05% 开仓 + 0.05% 平仓手�
 saved = load_params()
 
 st.sidebar.header("策略参数设置")
-total_capital = st.sidebar.number_input("总本金（USD）", value=saved.get("total_capital", 10000), step=500)
+total_capital = st.sidebar.number_input(
+    "总本金（USD）",
+    value=float(saved.get("total_capital", 10000)),
+    step=500
+)
 
 mode = st.sidebar.radio(
     "加仓方式",
@@ -43,27 +47,40 @@ mode = st.sidebar.radio(
     index=0 if saved.get("mode", "马丁加仓") == "马丁加仓" else 1
 )
 
-martin_ratio = st.sidebar.slider("马丁倍率", 1.0, 3.0, saved.get("martin_ratio", 2.0), 0.1)
-num_entries = st.sidebar.slider("加仓轮次", 2, 10, saved.get("num_entries", 4))
+martin_ratio = st.sidebar.slider(
+    "马丁倍率",
+    1.0, 3.0,
+    float(saved.get("martin_ratio", 2.0)),
+    0.1
+)
 
-# === 🔧 自定义小数位数设置 ===
+num_entries = st.sidebar.slider(
+    "加仓轮次",
+    2, 10,
+    int(saved.get("num_entries", 4))
+)
+
+# === 🔧 小数位数自定义
 st.sidebar.subheader("🔧 精度设置")
-decimal_places = st.sidebar.selectbox("价格小数位数", options=[0, 1, 2, 3, 4, 5, 6], index=saved.get("decimal_places", 2))
+decimal_places = st.sidebar.selectbox(
+    "价格小数位数",
+    options=[0, 1, 2, 3, 4, 5, 6],
+    index=int(saved.get("decimal_places", 2))
+)
 step_size = 1 / (10 ** decimal_places)
 price_format = f"%.{decimal_places}f"
 
-# === 目标反弹价格（使用自定义精度）
+# === 目标反弹价格
 target_price = st.sidebar.number_input(
     "目标反弹价格（USD）",
-    value=saved.get("target_price", 15000),
+    value=float(saved.get("target_price", 15000)),
     step=step_size,
     format=price_format
 )
 
-# === 每轮加仓价格与杠杆设置 ===
+# === 每轮加仓价格与杠杆设置
 st.sidebar.subheader("每轮加仓价格与杠杆设置")
 entry_prices, leverage_list = [], []
-
 key_prefix = f"v{num_entries}_{mode.replace(' ', '_')}"
 
 for i in range(num_entries):
@@ -71,7 +88,7 @@ for i in range(num_entries):
     with col1:
         entry_prices.append(st.number_input(
             f"第{i+1}轮加仓价格",
-            value=saved.get(f"price_{i}", round(14000 - i * 1000, decimal_places)),
+            value=float(saved.get(f"price_{i}", round(14000 - i * 1000, decimal_places))),
             step=step_size,
             format=price_format,
             key=f"{key_prefix}_price_{i}"
@@ -79,8 +96,10 @@ for i in range(num_entries):
     with col2:
         leverage_list.append(st.number_input(
             f"第{i+1}轮杠杆",
-            value=saved.get(f"lev_{i}", 5 if i == 0 else 10),
-            min_value=1, max_value=100, step=1,
+            value=int(saved.get(f"lev_{i}", 5 if i == 0 else 10)),
+            min_value=1,
+            max_value=100,
+            step=1,
             key=f"{key_prefix}_lev_{i}"
         ))
 
@@ -99,7 +118,6 @@ if st.sidebar.button("💾 保存当前参数设置"):
         param_to_save[f"lev_{i}"] = leverage_list[i]
     save_params(param_to_save)
     st.sidebar.success("✅ 参数保存成功！")
-
 
 # === 资金分配
 if mode == "固定金额":
