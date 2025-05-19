@@ -86,15 +86,6 @@ if st.sidebar.button("💾 保存当前参数设置"):
     save_params(param_to_save)
     st.sidebar.success("✅ 参数保存成功！")
     
-# === 每轮价格与杠杆 ===
-st.sidebar.subheader("每轮加仓价格与杠杆设置")
-entry_prices, leverage_list = [], []
-for i in range(num_entries):
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        entry_prices.append(st.number_input(f"第{i+1}轮加仓价格", value=14000 - i * 1000, step=100, key=f"price_{i}"))
-    with col2:
-        leverage_list.append(st.number_input(f"第{i+1}轮杠杆", value=5 if i == 0 else 10, min_value=1, max_value=100, step=1, key=f"lev_{i}"))
 
 # === 资金分配
 if mode == "固定金额":
